@@ -1,0 +1,32 @@
+node
+{
+   properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '3', daysToKeepStr: '', numToKeepStr: '3')), pipelineTriggers([pollSCM('* * * * *')])])
+    
+   def mavenHome = tool name: "Maven3.8.7"
+    
+stage('checkoutcode')
+{
+  git credentialsId: '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', 
+  url: 'https://github.com/ballas1983/java-app.git'  
+}
+
+stage('build')
+{
+    sh "${mavenHome}/bin/mvn clean package"
+}
+
+stage('Tomcat Server')
+{
+    sshagent(['4b8b77b1-5c80-4017-9fa2-c2d0e79d3a9f'])
+    {
+    sh "scp -o StrictHostKeyChecking=no webapp/target/webapp.war ec2-user@65.2.182.249:/usr/share/tomcat/webapps/"
+}
+}
+stage ('Send Email notification')
+{
+    mail bcc: '', body: '''buils finshed records ...........
+
+regards
+kiran''', cc: '', from: '', replyTo: '', subject: 'buils finshed records ', to: 'bkk.jew@gmail.com'
+}
+}
